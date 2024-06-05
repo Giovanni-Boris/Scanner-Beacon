@@ -2,6 +2,7 @@ package com.idnp2024a.beaconscanner.permissions
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,15 +17,22 @@ class BTPermissions(private val activity: MainActivityBLE) {
     private lateinit var alertDialog: AlertDialog
     private var dialogShown = false
 
-    val permissions = arrayOf(
-        //android.Manifest.permission.BLUETOOTH_CONNECT,
-        //android.Manifest.permission.BLUETOOTH_SCAN,
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.BLUETOOTH_ADMIN,
-        //android.Manifest.permission.BLUETOOTH_ADVERTISE,
-    )
-
+    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        arrayOf(
+            android.Manifest.permission.BLUETOOTH_CONNECT,
+            android.Manifest.permission.BLUETOOTH_SCAN,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.BLUETOOTH_ADMIN,
+            android.Manifest.permission.BLUETOOTH_ADVERTISE
+        )
+    } else {
+        arrayOf(
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.BLUETOOTH_ADMIN
+        )
+    }
     fun check() {
         permissionsList = ArrayList<String>()
         permissions.forEach {
