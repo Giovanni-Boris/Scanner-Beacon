@@ -29,6 +29,7 @@ class MainActivityBLE : AppCompatActivity() {
     private lateinit var bluetoothAdapter: BluetoothAdapter
     private lateinit var txtMessage: TextView;
     private val permissionManager = PermissionManager.from(this)
+    private val beacons = HashMap<String, Beacon>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,7 +89,6 @@ class MainActivityBLE : AppCompatActivity() {
                 .rationale("Bluetooth permission is needed")
                 .checkPermission { isgranted ->
                     if (isgranted) {
-                        Log.d(TAG, "Everything okey")
                         btScanner.startScan(bleScanCallback)
                     } else {
                         Log.d(TAG, "Alert you don't have Bluetooth permission")
@@ -126,13 +126,23 @@ class MainActivityBLE : AppCompatActivity() {
         Log.d(TAG, "onScanResultAction ")
 
         val scanRecord = result?.scanRecord
-        val beacon = Beacon(result?.device?.address)
-        beacon.manufacturer = result?.device?.name
-        beacon.rssi = result?.rssi
+        //val beacon = Beacon(result?.device?.address)
+        //beacon.manufacturer = result?.device?.name
+        //beacon.rssi = result?.rssi
         //beacon.manufacturer == "ESP32 Beacon
+        var rssi = result?.rssi
         if (scanRecord != null) {
             scanRecord?.bytes?.let {
-                val parserBeacon = BeaconParser.parseIBeacon(it,beacon.rssi)
+                val parserBeacon = BeaconParser.parseIBeacon(it, rssi)
+                if (!beacons.containsKey(parserBeacon.uuid)){
+                    parserBeacon.uuid?.let { it1 -> beacons.put(it1, parserBeacon) }
+                }
+                val beaconSave = beacons.get(parserBeacon.uuid)
+                if (beaconSave != null) {
+                    beaconSave.rssi = parserBeacon.rssi
+                };
+                val distance = parserBeacon.txPower?.let { it1 -> parserBeacon.rssi?.let { it2 -> beaconSave?.calculateDistance(txPower = it1, rssi = it2) } }
+                Log.d(TAG, beaconSave.toString() + "distance "+ distance);
                 txtMessage.setText(parserBeacon.toString())
 
             }
